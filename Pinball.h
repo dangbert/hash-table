@@ -59,6 +59,8 @@ private:
 
    // add private data members and 
    // private member functions as needed
+   unsigned int* m_offset; // array of offsets (determines auxillary slots)
+   int numEjections; // number of ejections in a single insert operation
 
 } ;
 

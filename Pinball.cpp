@@ -1,5 +1,7 @@
 #include "Pinball.h"
 #include <iostream>
+#include <assert.h>
+#include <string.h>
 using namespace std;
 
 
@@ -10,6 +12,35 @@ using namespace std;
  * data members that you create).
  */
 Pinball::Pinball(int n) {
+    H = new char*[n]; // the hash table
+    m_size = 0; // number of items stored in H
+    m_capacity = n; // number of slots in H
+
+    // my assigned values for this project:
+    m_degree = 5;
+    m_ejectLimit = 20;
+    numEjections = 0;
+    assert(m_degree <= m_capacity); // must be possible to have unique offsets
+
+    // create m_offsets (unique values)
+    m_offset = new unsigned int[m_degree-1];
+    m_offset[0] = rand() % m_capacity; // populate the first value
+
+    // TODO: also make sure that none of them are 0
+    for (int i=1; i<4; i++) {
+        bool unique = false;
+
+        while (!unique) {
+            m_offset[i] = rand() % m_capacity;
+            // compare against all previously generated offsets
+            for (int k=0; k<i; k++) {
+                if (m_offset[i] == m_offset[k])
+                    break;
+                if (k == i-1)
+                    unique = true;
+            }
+        }
+    }
 
 }
 
@@ -19,6 +50,10 @@ Pinball::Pinball(int n) {
  * strings (i.e., don't use delete).
  */
 Pinball::~Pinball() {
+    delete [] m_offset;
+    for (int i=0; i<m_capacity; i++) {
+        free(H[i]); // deallocate memory that was initialized with malloc()
+    }
 
 }
 
@@ -33,6 +68,41 @@ Pinball::~Pinball() {
  * no effect. (I.e., do not insert a second copy of the same value.)
  */
 void Pinball::insert(const char *str) {
+    char* value = strdup(str); // copy of str (uses malloc() internally)
+    unsigned int primarySlot = hashCode(str) % m_capacity;
+
+    if (H[primarySlot] == NULL) {
+        H[primarySlot] = value; // insert into primary slot
+        numEjections = 0; // reset the number of ejections
+    }
+    else {
+        bool inserted = false;
+        for (int i=0; i<m_degree-1; i++) {
+            int slot = (primarySlot + m_offset[i]) % m_capacity;
+            if (H[slot] != NULL) {
+                H[slot] = value;
+                inserted = true;
+                numEjections = 0;
+                break;
+            }
+        }
+
+        if (!inserted) { // all slots are full
+            // randomly chose one auxillary slot
+            int index = rand() % (m_degree-1); // random number between 0 and 3
+            int auxSlot = (primarySlot + m_offset[index]) % m_capacity;
+
+            const char* ejected = H[auxSlot];
+            H[auxSlot] = value;
+            numEjections++; // increment the number of ejections
+            if (numEjections > m_ejectLimit) {
+                //TODO: throw exception
+
+                return;
+            }
+            insert(ejected);
+        }
+    }
 
 }
 
