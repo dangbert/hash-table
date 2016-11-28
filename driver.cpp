@@ -121,7 +121,7 @@ int main() {
    // myRand(3170325890) ; srand(3170325890*37) ;
    // myRand(9132919912) ; srand(9132919912*37) ;
 
-   test(24, 16);
+   test(24, 21);
    return 0;
 
    test(5003,4000) ;   // >5,000 slots, ~80% full
