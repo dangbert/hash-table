@@ -21,7 +21,7 @@ test:
 	valgrind ./a.out
 
 save:
-	scp -r . end1@gl.umbc.edu:proj4/src
+	scp -r . end1@gl.umbc.edu:proj5/src
 
 clean:
 	rm -rf *.o

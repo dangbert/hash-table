@@ -12,7 +12,7 @@ using namespace std;
  * data members that you create).
  */
 Pinball::Pinball(int n) {
-    H = new char*[n]; // the hash table
+    H = new char*[n](); // the hash table, the () sets all indices to NULL
     m_size = 0; // number of items stored in H
     m_capacity = n; // number of slots in H
 
@@ -50,10 +50,15 @@ Pinball::Pinball(int n) {
  * strings (i.e., don't use delete).
  */
 Pinball::~Pinball() {
+    cout << "\n---destructing---" << endl;
     delete [] m_offset;
     for (int i=0; i<m_capacity; i++) {
-        free(H[i]); // deallocate memory that was initialized with malloc()
+        if (H[i] != NULL) {
+            cout << i << ":\t" << H[i] << endl;
+        }
+        free(H[i]); // deallocate memory that was initialized with malloc() by strdup()
     }
+    delete [] H;
 
 }
 
@@ -72,17 +77,21 @@ void Pinball::insert(const char *str) {
     unsigned int primarySlot = hashCode(str) % m_capacity;
 
     if (H[primarySlot] == NULL) {
+        cout << " inserted " << str << "\tinto primarySlot\t" << primarySlot << endl;
         H[primarySlot] = value; // insert into primary slot
         numEjections = 0; // reset the number of ejections
+        m_size++;
     }
     else {
         bool inserted = false;
         for (int i=0; i<m_degree-1; i++) {
             int slot = (primarySlot + m_offset[i]) % m_capacity;
-            if (H[slot] != NULL) {
+            if (H[slot] == NULL) {
                 H[slot] = value;
                 inserted = true;
                 numEjections = 0;
+                m_size++;
+                cout << " inserted " << str << "\tinto open aux\t" << slot << endl;
                 break;
             }
         }
@@ -92,15 +101,19 @@ void Pinball::insert(const char *str) {
             int index = rand() % (m_degree-1); // random number between 0 and 3
             int auxSlot = (primarySlot + m_offset[index]) % m_capacity;
 
-            const char* ejected = H[auxSlot];
+            char* ejected = H[auxSlot];
             H[auxSlot] = value;
             numEjections++; // increment the number of ejections
             if (numEjections > m_ejectLimit) {
-                //TODO: throw exception
+                // TODO: throw exception and free up memory (call destructor?)
+                cout << "****need to throw exception****" << endl;
 
                 return;
             }
+            cout << " inserted " << str << "\tinto taken aux\t" << auxSlot << endl;
+            cout << "....ejected: " << ejected << " from " << auxSlot << endl;
             insert(ejected);
+            free(ejected); // free it because the call to insert() used a copy
         }
     }
 
