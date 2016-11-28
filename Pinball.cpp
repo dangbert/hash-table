@@ -39,9 +39,6 @@ Pinball::Pinball(int n) {
             }
         }
     }
-
-    for (int i=0; i<4; i++)
-        cout << "offset " << i << " -> " << m_offset[i] << endl;
 }
 
 /*
@@ -53,9 +50,6 @@ Pinball::~Pinball() {
     cout << "\n---destructing---" << endl;
     delete [] m_offset;
     for (int i=0; i<m_capacity; i++) {
-        if (H[i] != NULL) {
-            cout << i << ":\t" << H[i] << endl;
-        }
         free(H[i]); // deallocate memory that was initialized with malloc() by strdup()
     }
     delete [] H;
@@ -118,7 +112,16 @@ void Pinball::insert(const char *str) {
  * or to remove().
  */
 int Pinball::find(const char *str) {
+    unsigned int primarySlot = hashCode(str) % m_capacity;
 
+    for (int i=0; i<m_degree; i++) { // look in all possible slots
+        int slot = (primarySlot + m_offset[i]) % m_capacity;
+        if (H[slot] != NULL) {
+            if (strcmp(H[slot], str) == 0) // if str is found here
+                return slot;
+        }
+    }
+    return -1;
 }
 
 /*
@@ -132,7 +135,12 @@ int Pinball::find(const char *str) {
  * desired.
  */
 const char* Pinball::at(int index) {
+    if (!(0 <= index && index < m_capacity)) {
+        // TODO: throw out_of_range_error
 
+    }
+    else
+        return H[index]; // could be NULL
 }
 
 /*
