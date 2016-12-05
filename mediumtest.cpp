@@ -1,3 +1,7 @@
+// File: mediumtest.cpp
+// Version: 2016-11-29 15:45pm
+
+
 #include <iostream>
 #include <time.h>
 #include <sys/resource.h>
@@ -54,6 +58,10 @@ int main() {
 
    int saveIndices[reps] ;  // array to remember which words were picked
 
+   for (int i=0 ; i < reps ; i++) {
+      saveIndices [i] = -1 ;
+   }
+
 
    // Pick some words from global words[] array to insert in the hash table. 
    // Pick words in index 0 .. 9999
@@ -76,6 +84,8 @@ int main() {
 
       } catch (PinballHashFull &e) {
          cout << e.what() << endl ;
+	 cout << "   iteration = " << i << endl ;
+	 cout << "   words[" << index << "] = " << words[index] << endl ;
          break ;
       } catch (...) {
          cout << "Unknown error\n" ;
@@ -91,7 +101,10 @@ int main() {
    cout << "\n\n" ;
    cout << "Look for inserted words...\n" ;
    for (int i=0 ; i < reps ; i++) {
+
       index = saveIndices[i] ;  // recover words that were picked
+      if (index < 0) continue ;  // maybe exception thrown?
+
       slot = PH.find(words[index]) ;
       if (slot < 0) {
          cout << "Inserted word not found: " << words[index] << endl  ;
@@ -126,15 +139,18 @@ int main() {
    cout << "\n\n" ;
    cout << "Remove some words ...\n" ;
    for (int j = 0 ; j < 20 ; j++) {
-      index = myRand() % reps ;
-      str = PH.remove(words[saveIndices[index]]) ;  // recover words that were picked
-      cout << "Removing " << words[saveIndices[index]] << endl ;
 
-      if (str != NULL && strcmp(str,words[saveIndices[index]]) != 0) {
+      index = saveIndices[myRand() % reps] ;
+      if (index < 0) continue ;  // maybe exception thrown?
+
+      str = PH.remove(words[index]) ;  // recover words that were picked
+      cout << "Removing " << words[index] << endl ;
+
+      if (str != NULL && strcmp(str,words[index]) != 0) {
          cout << "Wrong word removed!" << endl
               << "   str = " << str << endl 
-              << "   words[" << saveIndices[index] << "] = " 
-                 << words[saveIndices[index]] << endl ;
+              << "   words[" << index << "] = " 
+                 << words[index] << endl ;
       }
       free(str) ;
    }
@@ -146,7 +162,10 @@ int main() {
    cout << "\n\n" ;
    cout << "Look for inserted words...\n" ;
    for (int i=0 ; i < reps ; i++) {
+
       index = saveIndices[i] ;
+      if (index < 0) continue ;
+
       slot = PH.find(words[index]) ;
       if (slot < 0) {
          cout << "Inserted word not found: " << words[index] << endl  ;

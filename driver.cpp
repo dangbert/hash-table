@@ -1,6 +1,9 @@
 /* File: driver.cpp
 
    Main program used to test Pinball Hash Tables.
+
+   version: 2016-12-02 15:40
+      Alternate version of myRand() that uses rand48()
 */
 
 #include <iostream>
@@ -29,24 +32,15 @@ double getmsecs() {
 }
 
 
-// A "bug-proof" way to call rand() that preserves the state of the
-// random seed between calls to rand().
+// This version uses lrand48().
 // Set the random seed by passing a non-zero parameter.
 //
 int myRand(int seed=0) {
-
-   // static local variables persist between calls
-   static int savedSeed ;   
-
-   if (seed) savedSeed = seed ;
-
-   int othersSeed = rand() ;  // save other people's seed
-   srand(savedSeed) ;         // restore my seed
-   int result = rand() ;
-   savedSeed = result ;       // save for next time
-   srand(othersSeed) ;        // restore other people's
-   return result ;
+   if (seed) srand48(seed) ;
+   return lrand48() ;
 }
+
+
 
 
 // Exercise the Pinball Hash table with size slots
@@ -121,12 +115,8 @@ int main() {
    // myRand(3170325890) ; srand(3170325890*37) ;
    // myRand(9132919912) ; srand(9132919912*37) ;
 
-   test(24, 22);
-   return 0;
-
    test(5003,4000) ;   // >5,000 slots, ~80% full
    printf("\n\n") ;
-   return 0;
 
    test(10037,8000) ;  // >10,000 slots, ~80% full
    printf("\n\n") ;
