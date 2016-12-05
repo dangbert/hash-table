@@ -91,7 +91,6 @@ void Pinball::insert(const char *str) {
     // all possible slots are full
     // check that the ejectionLimit hasn't been reached
     if (numEjections == m_ejectLimit) {
-        // TODO: fix memory leak here (call destructor?)
         free(value); // free the string that was going to be inserted
         cout << "******throwing exception******" << endl;
         throw PinballHashFull("Ejection limit exceeded.");
@@ -106,7 +105,14 @@ void Pinball::insert(const char *str) {
     numEjections++; // increment the number of ejections
     cout << " inserted " << str << "\tinto taken aux\t" << auxSlot << endl;
     cout << "....ejected: " << ejected << " from " << auxSlot << endl;
-    insert(ejected);
+
+    try {
+        insert(ejected);
+    } catch (PinballHashFull &e) {
+        // catch the exception so that memory can be freed
+        free(ejected);
+        throw e; // now rethrow the exception
+    }
     free(ejected); // free ejected because the call to insert() stored a copy
 }
 

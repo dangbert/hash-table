@@ -18,7 +18,7 @@ test:
 	clear
 	make clean
 	make
-	valgrind ./a.out
+	valgrind --leak-check=full ./a.out
 
 save:
 	scp -r . end1@gl.umbc.edu:proj5/src
