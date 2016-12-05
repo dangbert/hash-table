@@ -2,6 +2,7 @@
 #include <iostream>
 #include <assert.h>
 #include <string.h>
+#include <stdexcept>
 using namespace std;
 
 
@@ -42,9 +43,9 @@ Pinball::Pinball(int n) {
 }
 
 /*
- * This is the destructor. Make sure you deallocate all memory for this object.
+ * destructor
  * Strings in the H array must be deallocated using free() since they are C
- * strings (i.e., don't use delete).
+ * strings
  */
 Pinball::~Pinball() {
     cout << "\n---destructing---" << endl;
@@ -68,8 +69,10 @@ Pinball::~Pinball() {
 void Pinball::insert(const char *str) {
     char* value = strdup(str); // copy of str (uses malloc() internally)
     unsigned int primarySlot = hashCode(str) % m_capacity;
+    // TODO call find() and make sure it retuns -1
 
-    // look for an open slot (starting with the primarySlot)
+    // look for an open slot
+    // (i=0 corresponds to the primarySlot)
     for (int i=0; i<m_degree; i++) { // loop through all the offsets
         int slot = (primarySlot + m_offset[i]) % m_capacity;
         if (H[slot] == NULL) { // if this slot is free
@@ -85,19 +88,22 @@ void Pinball::insert(const char *str) {
         }
     }
 
-    // all slots are full so randomly chose one auxillary slot
+    // all possible slots are full
+    // check that the ejectionLimit hasn't been reached
+    if (numEjections == m_ejectLimit) {
+        // TODO: fix memory leak here (call destructor?)
+        free(value); // free the string that was going to be inserted
+        cout << "******throwing exception******" << endl;
+        throw PinballHashFull("Ejection limit exceeded.");
+    }
+
+    // randomly chose one auxillary slot to free up by ejecting its value
     int index = 1 + rand() % (m_degree-1); // random num between 1 and (m_degree-1)
     int auxSlot = (primarySlot + m_offset[index]) % m_capacity; // index of the auxillary slot
 
     char* ejected = H[auxSlot];
     H[auxSlot] = value;
     numEjections++; // increment the number of ejections
-    if (numEjections > m_ejectLimit) {
-        // TODO: throw exception and free up memory (call destructor?)
-        cout << "****need to throw exception****" << endl;
-
-        return;
-    }
     cout << " inserted " << str << "\tinto taken aux\t" << auxSlot << endl;
     cout << "....ejected: " << ejected << " from " << auxSlot << endl;
     insert(ejected);
@@ -137,10 +143,10 @@ int Pinball::find(const char *str) {
 const char* Pinball::at(int index) {
     if (!(0 <= index && index < m_capacity)) {
         // TODO: throw out_of_range_error
+        throw std::out_of_range("Index out of range in at() function.");
 
     }
-    else
-        return H[index]; // could be NULL
+    return H[index]; // could be NULL
 }
 
 /*
@@ -151,7 +157,15 @@ const char* Pinball::at(int index) {
  * string that is returned. (Again, use free(), not delete to deallocate.)
  */
 char* Pinball::remove(const char *str) {
+    //int Pinball::find(const char *str) {
+    int index = find(str);
+    if (index == -1)
+        return NULL;
 
+    char* removed = H[index]; // pointer to the string removed
+    H[index] = NULL; // remove the target string from the Hash table
+    m_size--;
+    return removed;
 }
 
 /*
