@@ -24,6 +24,11 @@ using namespace std;
  */
 Pinball::Pinball(int n) {
     H = new char*[n](); // the hash table, the () sets all indices to NULL
+    m_primarys = new bool[n]; // indicates when an index in H is used as a primarySlot
+    for (int i=0; i<n; i++) {
+        m_primarys[i] = false;
+    }
+
     m_capacity = n;     // number of slots in H
     m_size = 0;         // number of items stored in H
     m_degree = 5;       // my assigned value
@@ -55,7 +60,9 @@ Pinball::Pinball(int n) {
  * Destructor
  */
 Pinball::~Pinball() {
+    delete [] m_primarys;
     delete [] m_offset;
+
     for (int i=0; i<m_capacity; i++) {
         free(H[i]); // deallocate memory that was initialized with malloc() by strdup()
     }
@@ -85,6 +92,12 @@ void Pinball::insert(const char *str) {
             H[slot] = value;    // insert into this slot
             numEjections = 0;   // reset the number of ejections
             m_size++;
+
+            // keep track of which primary slots are used
+            if (i == 0) // if this is the primarySlot for str
+                m_primarys[slot] = true;
+            else
+                m_primarys[slot] = false; // make sure this is false
             return;
         }
     }
@@ -101,9 +114,11 @@ void Pinball::insert(const char *str) {
     int index = 1 + rand() % (m_degree-1); // random int between 1 and (m_degree-1)
     int auxSlot = (primarySlot + m_offset[index]) % m_capacity; // index of the auxillary slot
 
+    // (m_size stays the same)
     char* ejected = H[auxSlot];
     H[auxSlot] = value;
     numEjections++; // increment the number of ejections
+    m_primarys[auxSlot] = false; // this isn't a primary slot
 
     try {
         insert(ejected);
@@ -163,6 +178,7 @@ char* Pinball::remove(const char *str) {
 
     char* removed = H[index]; // pointer to the string being removed
     H[index] = NULL; // remove the target string from the Hash table
+    m_primarys[index] = false;
     m_size--;
     return removed;
 }
@@ -181,15 +197,13 @@ void Pinball::printStats() {
 	cout << "   degree = " << m_degree << endl;
 	cout << "   ejection limit = " << m_ejectLimit << endl;
 
-	// TODO: remove this part
-	int sizeCheck = 0;
+    int numPrimary = 0;
 	for (int i=0; i<m_capacity; i++) {
-		if (H[i] != NULL)
-			sizeCheck++;
+        if (m_primarys[i])
+            numPrimary++;
 	}
-	cout << "double checked size: " << sizeCheck << endl;
+	cout << "number of primary slots = " << numPrimary << endl;
 /*
-	cout << "number of primary slots  = " << << endl;
 	cout << "average hits to primary slots = " << << endl;
 	cout << "maximum hits to primary slots = " << << endl;
 	cout << "total number of ejections = " << << endl;

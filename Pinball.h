@@ -62,6 +62,8 @@ private:
    unsigned int* m_offset; // array of offsets (determines auxillary slots)
    int numEjections; // number of ejections in a single insert operation
 
+   // array of ints indicating if the same index in H is used as a primarySlot
+   bool* m_primarys;
 } ;
 
 

@@ -50,7 +50,7 @@ int main() {
     //TODO: call printStats at end
     Pinball PH = Pinball(100);
     int index;
-    int reps = 92; // number of words to insert into the hash table
+    int reps = 70; // number of words to insert into the hash table
 
     int saveIndices[reps];  // array to remember which words were picked
     for (int i=0; i < reps; i++) {
@@ -78,6 +78,7 @@ int main() {
         }
     }
     cout << "...complete!\n\n";
+    //PH.printStats();
 
 
     // check that all the inserted words are really there
