@@ -1,5 +1,5 @@
 FLAGS = -Wall
-DRIVER = driver
+DRIVER = mydriver
 
 all: Driver.o Pinball.o
 	g++ $(FLAGS) Driver.o Pinball.o -o a.out

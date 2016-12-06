@@ -48,7 +48,6 @@ Pinball::Pinball(int n) {
  * strings
  */
 Pinball::~Pinball() {
-    cout << "\n---destructing---" << endl;
     delete [] m_offset;
     for (int i=0; i<m_capacity; i++) {
         free(H[i]); // deallocate memory that was initialized with malloc() by strdup()
@@ -80,10 +79,12 @@ void Pinball::insert(const char *str) {
             numEjections = 0; // reset the number of ejections
             m_size++;
 
+            /*
             if (i == 0)
                 cout << " inserted " << str << "\tinto primarySlot\t" << primarySlot << endl;
             else
                 cout << " inserted " << str << "\tinto open aux\t" << slot << endl;
+            */
             return;
         }
     }
@@ -92,7 +93,6 @@ void Pinball::insert(const char *str) {
     // check that the ejectionLimit hasn't been reached
     if (numEjections == m_ejectLimit) {
         free(value); // free the string that was going to be inserted
-        cout << "******throwing exception******" << endl;
         throw PinballHashFull("Ejection limit exceeded.");
     }
 
@@ -103,8 +103,10 @@ void Pinball::insert(const char *str) {
     char* ejected = H[auxSlot];
     H[auxSlot] = value;
     numEjections++; // increment the number of ejections
+    /*
     cout << " inserted " << str << "\tinto taken aux\t" << auxSlot << endl;
     cout << "....ejected: " << ejected << " from " << auxSlot << endl;
+    */
 
     try {
         insert(ejected);
@@ -156,11 +158,10 @@ const char* Pinball::at(int index) {
 }
 
 /*
- * The remove() function removes str from the hash table and returns the pointer.
- * If str is not in the hash table, remove() returns NULL.
+ * removes str from the hash table and returns the pointer
+ * returns NULL if str is not in the hash table
  *
- * It is the responsibility of the code that calls remove() to deallocate the
- * string that is returned. (Again, use free(), not delete to deallocate.)
+ * The code that calls remove() must free the pointer that is returned
  */
 char* Pinball::remove(const char *str) {
     //int Pinball::find(const char *str) {
