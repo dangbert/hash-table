@@ -128,7 +128,9 @@ int main() {
         free(str);
     }
     if (passed)
-        cout << "...words were successfully removed!" << endl;
+        cout << "...words were successfully removed!\n" << endl;
     else 
-        cout << "...test failed." << endl;
+        cout << "...test failed.\n" << endl;
+
+    PH.printStats();
 }
