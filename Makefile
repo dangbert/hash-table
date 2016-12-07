@@ -12,13 +12,14 @@ Pinball.o: Pinball.cpp Pinball.h
 
 
 run:
-	./a.out $(INPUT) $(FLAG)
+	./a.out
 
 test:
 	clear
 	make clean
 	make
-	valgrind --leak-check=full ./a.out
+#valgrind --leak-check=full ./a.out
+	./a.out
 
 save:
 	scp -r . end1@gl.umbc.edu:proj5/src

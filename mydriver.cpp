@@ -19,7 +19,6 @@ using namespace std;
 // A "bug-proof" way to call rand() that preserves the state of the
 // random seed between calls to rand().
 // Set the random seed by passing a non-zero parameter.
-//
 int myRand(int seed=0) {
 
     // static local variables persist between calls
@@ -36,21 +35,19 @@ int myRand(int seed=0) {
 }
 
 int main() {
-
-    int slot;
-
+	// set the seed based on the current time
     struct timeval tp;
     gettimeofday(&tp, NULL);
     long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
     printf("Random seed set to: %ld\n\n", ms);
     myRand(ms);
-
     // myRand(8781035); // Uncomment to use same random seed each time
 
-    //TODO: call printStats at end
+
     Pinball PH = Pinball(100);
+    int reps = 83; // number of words to insert into the hash table
     int index;
-    int reps = 70; // number of words to insert into the hash table
+    int slot;
 
     int saveIndices[reps];  // array to remember which words were picked
     for (int i=0; i < reps; i++) {
@@ -78,7 +75,8 @@ int main() {
         }
     }
     cout << "...complete!\n\n";
-    //PH.printStats();
+    PH.printStats();
+    cout << "\n\n";
 
 
     // check that all the inserted words are really there
