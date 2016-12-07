@@ -15,24 +15,10 @@
 
 using namespace std;
 
-
-// A "bug-proof" way to call rand() that preserves the state of the
-// random seed between calls to rand().
-// Set the random seed by passing a non-zero parameter.
-int myRand(int seed=0) {
-
-    // static local variables persist between calls
-    static int savedSeed;   
-
-    if (seed) savedSeed = seed;
-
-    int othersSeed = rand();  // save other people's seed
-    srand(savedSeed);         // restore my seed
-    int result = rand();
-    savedSeed = result;       // save for next time
-    srand(othersSeed);        // restore other people's
-    return result;
-}
+// function prototypes
+int myRand(int seed=0);
+void test(int size, int reps);
+void testFully(int size);
 
 int main() {
 	// set the seed based on the current time
@@ -44,42 +30,113 @@ int main() {
     // myRand(8781035); // Uncomment to use same random seed each time
 
 
-    Pinball PH = Pinball(100);
-    int reps = 83; // number of words to insert into the hash table
-    int index;
-    int slot;
+    testFully(5003);
+    testFully(10037);
+    testFully(20101);
 
+    return 0;
+
+    test(5003,4000) ;   // >5,000 slots, ~80% full
+    printf("\n\n") ;
+
+    test(10037,8000) ;  // >10,000 slots, ~80% full
+    printf("\n\n") ;
+
+    test(20101,16000) ;  // >20,000 slots, ~80% full
+    printf("\n\n") ;
+
+}
+
+void testFully(int size) {
+    int reps;
+
+    for (int i=50; i<=90; i+=10) {
+        cout << "-------------------------------------------------------" << endl;
+        cout << "-------------Testing size " << size << " at " << i << "% full-------------" << endl;
+        cout << "-------------------------------------------------------" << endl;
+        reps = size * i / 100;
+
+        cout << "reps = " << reps << endl;
+        for (int i=1; i<=10; i++) {
+            test(size, reps);
+        }
+        cout << "\n\n\n" << endl;
+    }
+
+}
+
+// Get amount of user time since the program began in milliseconds.
+//
+double getmsecs() {
+   struct rusage use;
+   struct timeval utime;
+
+   getrusage(RUSAGE_SELF, &use);
+   utime = use.ru_utime;
+   return ((double) utime.tv_sec)*1000.0 +  ((double) utime.tv_usec)/1000.0;
+}
+
+
+// This version uses lrand48().
+// Set the random seed by passing a non-zero parameter.
+//
+int myRand(int seed) {
+   if (seed) srand48(seed);
+   return lrand48();
+}
+
+
+/*
+ * tests the Pinball class and outputs the resulting stats
+ * @param size: the size of the hash table
+ * @param reps: number of words to insert into the hash table
+ */
+void test(int size, int reps) {
+    double startTime, stopTime;
+
+    Pinball PH = Pinball(size);
     int saveIndices[reps];  // array to remember which words were picked
     for (int i=0; i < reps; i++) {
         saveIndices [i] = -1; // initialize all values to -1
     }
 
-    cout << "Inserting some words..." << endl;
+    startTime = getmsecs();
+
+    int index;
+    int slot;
+
+    ///cout << "Inserting some words..." << endl;
     bool exceptionThrown = false; // true if a PinballHashFull error is thrown
     // Pick some words from global words[] array to insert in the hash table. 
-    // Pick words in index 0 .. 9999
+    // TODO: make sure a word isn't alreay in the hash table before inserting it (see driver.cpp)
     for (int i=0; i < reps; i++) {
         try {
-            index = myRand() % 10000;  // random int 0 to 9999
+            index = myRand() % numWords;
             saveIndices[i] = index;    // save indices of the picked words
             PH.insert(words[index]); // insert the word into the hash table
 
         } catch (PinballHashFull &e) {
             cout << e.what() << endl;
             exceptionThrown = true;
-            cout << "   iteration = " << i << endl;
-            cout << "   words[" << index << "] = " << words[index] << endl;
+            //cout << "   iteration = " << i << endl;
+            //cout << "   words[" << index << "] = " << words[index] << endl;
             break;
         } catch (...) {
             cout << "Unknown error\n";
         }
     }
-    cout << "...complete!\n\n";
+    ///cout << "...complete!\n\n";
+
+    stopTime = getmsecs();
+    printf("Elapsed time = %.3lf milliseconds\n", stopTime - startTime);
+
     PH.printStats();
     cout << "\n\n";
+    return;
 
+    // (the code below is for debugging)
 
-    // check that all the inserted words are really there
+    // check that all the inserted words are really there (for debugging)
     cout << "verifying that all inserted words are really there..." << endl;
     bool error = false; // used to indicate if a test passed or not
     int notFound = 0; // number of words not found
