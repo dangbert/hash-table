@@ -34,6 +34,9 @@ Pinball::Pinball(int n) {
     m_degree = 5;       // my assigned value
     m_ejectLimit = 20;  // my assigned value
     numEjections = 0;
+    maxEjections = 0;
+    cumlEjections = 0;
+    stillEjecting = false;
     assert(m_degree <= m_capacity); // must be possible to have all unique offsets
 
     // create m_offsets (unique values)
@@ -89,6 +92,13 @@ void Pinball::insert(const char *str) {
     for (int i=0; i<m_degree; i++) { // loop through all the offsets
         int slot = (primarySlot + m_offset[i]) % m_capacity;
         if (H[slot] == NULL) {  // if this slot is free
+
+            if (stillEjecting) {
+                if (numEjections > maxEjections) // update maxEjections if needed
+                    maxEjections = numEjections;
+                stillEjecting = false; // the ejection process has now stopped
+            }
+
             H[slot] = value;    // insert into this slot
             numEjections = 0;   // reset the number of ejections
             m_size++;
@@ -97,7 +107,7 @@ void Pinball::insert(const char *str) {
             if (i == 0) // if this is the primarySlot for str
                 m_primarys[slot] = true;
             else
-                m_primarys[slot] = false; // make sure this is false
+                m_primarys[slot] = false; // makes sure this is false
             return;
         }
     }
@@ -105,19 +115,24 @@ void Pinball::insert(const char *str) {
     // all possible slots are full
     // check that the ejectionLimit hasn't been reached
     if (numEjections == m_ejectLimit) {
+        // update numEjections since it didn't get a chance to update
+        maxEjections = numEjections;
         // give up on inserting this string, declare the hash table full
         free(value); // free the string that was going to be inserted
         throw PinballHashFull("*** Exception: Ejection limit exceeded!");
     }
 
+
     // randomly chose one auxillary slot to free up by ejecting its value
+    stillEjecting = true; // note that the ejection process is occurring
     int index = 1 + rand() % (m_degree-1); // random int between 1 and (m_degree-1)
     int auxSlot = (primarySlot + m_offset[index]) % m_capacity; // index of the auxillary slot
 
-    // (m_size stays the same)
+    // eject from auxSlot and then use the spot (m_size stays the same)
     char* ejected = H[auxSlot];
     H[auxSlot] = value;
     numEjections++; // increment the number of ejections
+    cumlEjections++;
     m_primarys[auxSlot] = false; // this isn't a primary slot
 
     try {
@@ -197,16 +212,14 @@ void Pinball::printStats() {
 	cout << "   degree = " << m_degree << endl;
 	cout << "   ejection limit = " << m_ejectLimit << endl;
 
-    int numPrimary = 0;
+    int numPrimary = 0; // number of slots currently filled as primary slots in the table
 	for (int i=0; i<m_capacity; i++) {
         if (m_primarys[i])
             numPrimary++;
 	}
-	cout << "number of primary slots = " << numPrimary << endl;
-/*
-	cout << "average hits to primary slots = " << << endl;
-	cout << "maximum hits to primary slots = " << << endl;
-	cout << "total number of ejections = " << << endl;
-	cout << "maximum number of ejections in a single insertion = " << << endl;
-*/
+	cout << "   number of primary slots = " << numPrimary << endl;
+	cout << "   average hits to primary slots = " << (float) m_size / numPrimary << endl;
+	//cout << "   maximum hits to primary slots = " << << endl; // TODO
+	cout << "   total number of ejections = " << cumlEjections << endl;
+	cout << "   maximum number of ejections in a single insertion = " << maxEjections << endl;
 }

@@ -60,7 +60,10 @@ private:
    // add private data members and 
    // private member functions as needed
    unsigned int* m_offset; // array of offsets (determines auxillary slots)
-   int numEjections; // number of ejections in a single insert operation
+   int numEjections;       // number of ejections in a single insert operation
+   int maxEjections;       // max number of injections from any one insert
+   int cumlEjections;      // cumulative number of ejections since table was created
+   bool stillEjecting;     // true when the ejection process is occuring
 
    // array of ints indicating if the same index in H is used as a primarySlot
    bool* m_primarys;
