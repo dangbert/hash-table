@@ -65,8 +65,11 @@ private:
    int cumlEjections;      // cumulative number of ejections since table was created
    bool stillEjecting;     // true when the ejection process is occuring
 
-   // array of ints indicating if the same index in H is used as a primarySlot
+   // array of bools indicating if the same index in H is used as a primarySlot
    bool* m_primarys;
+
+   // array indicating # of items in hash table that hash to each primary slot
+   int* m_primaryHits;
 } ;
 
 

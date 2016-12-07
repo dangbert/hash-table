@@ -25,8 +25,10 @@ using namespace std;
 Pinball::Pinball(int n) {
     H = new char*[n](); // the hash table, the () sets all indices to NULL
     m_primarys = new bool[n]; // indicates when an index in H is used as a primarySlot
+    m_primaryHits = new int[n];
     for (int i=0; i<n; i++) {
         m_primarys[i] = false;
+        m_primaryHits[i] = 0;
     }
 
     m_capacity = n;     // number of slots in H
@@ -64,6 +66,7 @@ Pinball::Pinball(int n) {
  */
 Pinball::~Pinball() {
     delete [] m_primarys;
+    delete [] m_primaryHits;
     delete [] m_offset;
 
     for (int i=0; i<m_capacity; i++) {
@@ -99,9 +102,14 @@ void Pinball::insert(const char *str) {
                 stillEjecting = false; // the ejection process has now stopped
             }
 
-            H[slot] = value;    // insert into this slot
-            numEjections = 0;   // reset the number of ejections
+            // insert into this slot
+            H[slot] = value;
             m_size++;
+            numEjections = 0; // reset the number of ejections
+
+            // update statistics variables:
+            // keep track of how many things hash to each primarySlot
+            m_primaryHits[primarySlot]++;
 
             // keep track of which primary slots are used
             if (i == 0) // if this is the primarySlot for str
@@ -133,6 +141,12 @@ void Pinball::insert(const char *str) {
     H[auxSlot] = value;
     numEjections++; // increment the number of ejections
     cumlEjections++;
+
+    // keep track of how many things hash to each primarySlot
+    m_primaryHits[primarySlot]++;
+    unsigned int ejected_primarySlot = hashCode(ejected) % m_capacity;
+    m_primaryHits[ejected_primarySlot]--; // incremented again later by insert()
+
     m_primarys[auxSlot] = false; // this isn't a primary slot
 
     try {
@@ -186,7 +200,6 @@ const char* Pinball::at(int index) {
  * The code that calls remove() must free the pointer that is returned.
  */
 char* Pinball::remove(const char *str) {
-    //int Pinball::find(const char *str) {
     int index = find(str);
     if (index == -1)
         return NULL;
@@ -195,6 +208,10 @@ char* Pinball::remove(const char *str) {
     H[index] = NULL; // remove the target string from the Hash table
     m_primarys[index] = false;
     m_size--;
+
+    unsigned int removed_primarySlot = hashCode(removed) % m_capacity;
+    m_primaryHits[removed_primarySlot]--;
+
     return removed;
 }
 
@@ -205,21 +222,28 @@ char* Pinball::remove(const char *str) {
  * (See additional clarifications in project description)
  */
 void Pinball::printStats() {
-	cout << "Hash statistics report:" << endl;
-	cout << "   randomness level = not very random" << endl; // my assigned option
-	cout << "   capacity = " << m_capacity << endl;
-	cout << "   size = " << m_size << endl;
-	cout << "   degree = " << m_degree << endl;
-	cout << "   ejection limit = " << m_ejectLimit << endl;
-
     int numPrimary = 0; // number of slots currently filled as primary slots in the table
-	for (int i=0; i<m_capacity; i++) {
+    int maxPrimaryHits = 0;
+    for (int i=0; i<m_capacity; i++) {
         if (m_primarys[i])
             numPrimary++;
-	}
-	cout << "   number of primary slots = " << numPrimary << endl;
-	cout << "   average hits to primary slots = " << (float) m_size / numPrimary << endl;
-	//cout << "   maximum hits to primary slots = " << << endl; // TODO
-	cout << "   total number of ejections = " << cumlEjections << endl;
-	cout << "   maximum number of ejections in a single insertion = " << maxEjections << endl;
+
+        if (m_primaryHits[i] > maxPrimaryHits)
+            maxPrimaryHits = m_primaryHits[i];
+    }
+
+    cout << "Hash statistics report:" << endl;
+    cout << "   randomness level = not very random" << endl; // my assigned option
+    cout << "   capacity = " << m_capacity << endl;
+    cout << "   size = " << m_size << endl;
+    cout << "   degree = " << m_degree << endl;
+    cout << "   ejection limit = " << m_ejectLimit << endl;
+    cout << "   number of primary slots = " << numPrimary << endl;
+    cout << "   average hits to primary slots = " << (float) m_size / numPrimary << endl;
+
+    // maximum hits to primary slots is the maximum # of items that hash to the
+    // same primary slot considering only the items currently in the hash table
+    cout << "   maximum hits to primary slots = " << maxPrimaryHits << endl;
+    cout << "   total number of ejections = " << cumlEjections << endl;
+    cout << "   maximum number of ejections in a single insertion = " << maxEjections << endl;
 }

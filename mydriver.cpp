@@ -47,6 +47,8 @@ int main() {
 
 }
 
+// test using the given size at 50%, 60%, 70%, 80%, and 90% full
+// test 10 times at each size
 void testFully(int size) {
     int reps;
 
@@ -66,7 +68,6 @@ void testFully(int size) {
 }
 
 // Get amount of user time since the program began in milliseconds.
-//
 double getmsecs() {
    struct rusage use;
    struct timeval utime;
