@@ -108,11 +108,17 @@ void test(int size, int reps) {
     ///cout << "Inserting some words..." << endl;
     bool exceptionThrown = false; // true if a PinballHashFull error is thrown
     // Pick some words from global words[] array to insert in the hash table. 
-    // TODO: make sure a word isn't alreay in the hash table before inserting it (see driver.cpp)
     for (int i=0; i < reps; i++) {
-        try {
+        // find a word that isn't already in the hash table
+        do {
             index = myRand() % numWords;
-            saveIndices[i] = index;    // save indices of the picked words
+            slot = PH.find(words[index]);
+        }
+        while(slot > -1); // while word already exists in the hash table
+
+        saveIndices[i] = index;    // save indices of the picked words
+
+        try {
             PH.insert(words[index]); // insert the word into the hash table
 
         } catch (PinballHashFull &e) {
